@@ -1,6 +1,6 @@
 [package]
 name = "spacefinder"
-version = "0.1.0"
+version = "0.1.1"
 description = "Disk usage treemap visualizer"
 authors = ["skmtkytr"]
 edition = "2021"
