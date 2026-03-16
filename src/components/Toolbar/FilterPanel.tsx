@@ -62,7 +62,7 @@ export const FilterPanel: React.FC = () => {
           placeholder="Filter by name..."
           value={nameInput}
           onChange={(e) => setNameInput(e.target.value)}
-          className="px-2.5 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 w-48 focus:outline-none focus:border-blue-500"
+          className="px-2.5 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 w-48 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40"
         />
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-gray-400">Min:</span>
@@ -71,7 +71,7 @@ export const FilterPanel: React.FC = () => {
             placeholder="MB"
             value={sizeInput}
             onChange={(e) => setSizeInput(e.target.value)}
-            className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 w-20 focus:outline-none focus:border-blue-500"
+            className="px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 w-20 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40"
             min={0}
             step={1}
           />
@@ -97,7 +97,7 @@ export const FilterPanel: React.FC = () => {
             <button
               key={cat}
               onClick={() => toggleCategory(cat)}
-              className={`px-2 py-0.5 text-xs rounded-full border transition-colors ${
+              className={`px-2 py-0.5 text-xs rounded-full border transition-all duration-200 ${
                 active
                   ? "text-white border-transparent"
                   : "text-gray-400 border-gray-600 hover:border-gray-500"

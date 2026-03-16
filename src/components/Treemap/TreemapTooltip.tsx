@@ -2,6 +2,7 @@ import React from "react";
 import type { FileNode } from "../../types/fileTree";
 import { formatSize } from "../../utils/formatSize";
 import { getFileCategory, CATEGORY_LABELS } from "../../utils/fileCategories";
+import { CATEGORY_COLORS } from "../../utils/colorScale";
 
 interface Props {
   node: FileNode;
@@ -16,18 +17,23 @@ export const TreemapTooltip: React.FC<Props> = ({ node, parentSize, x, y }) => {
 
   return (
     <div
-      className="fixed z-50 pointer-events-none bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 shadow-xl text-sm max-w-xs"
+      className="fixed z-50 pointer-events-none backdrop-blur-sm bg-gray-900/90 border border-gray-600 rounded-lg px-3 py-2 shadow-xl text-sm max-w-xs"
       style={{ left: x + 12, top: y + 12 }}
     >
       <div className="font-bold text-white truncate">{node.name}</div>
-      <div className="text-gray-400 text-xs truncate mt-0.5">{node.path}</div>
+      <div className="text-gray-300 text-xs truncate mt-0.5">{node.path}</div>
       <div className="mt-1.5 space-y-0.5">
         <div className="text-gray-300">
           Size: <span className="text-white font-medium">{formatSize(node.size)}</span>
         </div>
         {!node.isDir && (
-          <div className="text-gray-300">
-            Type: <span className="text-white">{CATEGORY_LABELS[category]}</span>
+          <div className="text-gray-300 flex items-center gap-1.5">
+            Type:
+            <span
+              className="inline-block w-2 h-2 rounded-full"
+              style={{ backgroundColor: CATEGORY_COLORS[category] }}
+            />
+            <span className="text-white">{CATEGORY_LABELS[category]}</span>
           </div>
         )}
         {node.isDir && (

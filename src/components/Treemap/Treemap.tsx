@@ -14,6 +14,7 @@ interface Props {
 export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [hoveredPath, setHoveredPath] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{
     node: FileNode;
     parentSize: number;
@@ -55,6 +56,7 @@ export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent, node: TreemapNode) => {
+      setHoveredPath(node.data.path);
       setTooltip({
         node: node.data,
         parentSize: currentNode?.size ?? 0,
@@ -66,6 +68,7 @@ export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
   );
 
   const handleMouseLeave = useCallback(() => {
+    setHoveredPath(null);
     setTooltip(null);
   }, []);
 
@@ -74,10 +77,13 @@ export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
       return (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-gray-400">
-            <div className="text-5xl mb-4">&#128193;</div>
+            <svg className="w-16 h-16 mx-auto mb-4 text-gray-500" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 10h12l4 4h20v24H6z" />
+              <path d="M20 28v-6M17 25l3-3 3 3" />
+            </svg>
             <div className="text-xl font-medium">Open a folder to get started</div>
-            <div className="text-sm mt-2">
-              Click "Open Folder" in the toolbar above
+            <div className="text-sm mt-2 text-gray-500">
+              Click "Open Folder" in the toolbar or press {"\u2318"}O
             </div>
           </div>
         </div>
@@ -88,7 +94,9 @@ export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
       return (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-gray-300">
-            <div className="animate-spin text-4xl mb-4">&#9881;</div>
+            <svg className="w-12 h-12 mx-auto mb-4 text-blue-400 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M12 2a10 10 0 0 1 10 10" />
+            </svg>
             <div className="text-lg font-medium">Scanning...</div>
             {scanProgress && (
               <div className="mt-3 space-y-1 text-sm text-gray-400">
@@ -109,7 +117,11 @@ export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
       return (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-red-400">
-            <div className="text-4xl mb-4">&#9888;</div>
+            <svg className="w-12 h-12 mx-auto mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
             <div className="text-lg">Scan failed. Try again.</div>
           </div>
         </div>
@@ -119,6 +131,15 @@ export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
     return (
       <>
         <svg width={dimensions.width} height={dimensions.height}>
+          <defs>
+            <filter id="hover-brightness">
+              <feComponentTransfer>
+                <feFuncR type="linear" slope="1.2" />
+                <feFuncG type="linear" slope="1.2" />
+                <feFuncB type="linear" slope="1.2" />
+              </feComponentTransfer>
+            </filter>
+          </defs>
           {layoutNodes.map((node, i) => {
             const w = node.x1 - node.x0;
             const h = node.y1 - node.y0;
@@ -129,6 +150,7 @@ export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
             const showLabel = w > 40 && h > 16;
             const showSize = w > 60 && h > 30;
             const isDir = node.data.isDir && node.depth > 0;
+            const isHovered = hoveredPath === node.data.path;
 
             return (
               <g
@@ -141,6 +163,7 @@ export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
                   onContextMenu(e, node.data);
                 }}
                 style={{ cursor: node.data.isDir ? "pointer" : "default" }}
+                filter={isHovered ? "url(#hover-brightness)" : undefined}
               >
                 <rect
                   x={node.x0}
@@ -148,10 +171,11 @@ export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
                   width={w}
                   height={h}
                   fill={color}
-                  stroke={node.depth === 0 ? "transparent" : "#1a1a2e"}
-                  strokeWidth={node.data.isDir ? 1.5 : 0.5}
+                  stroke={isHovered ? "rgba(255,255,255,0.5)" : node.depth === 0 ? "transparent" : "#1a1a2e"}
+                  strokeWidth={isHovered ? 2 : node.data.isDir ? 1.5 : 0.5}
                   opacity={isDir ? 0.7 : 0.9}
                   rx={node.data.isDir ? 2 : 1}
+                  style={{ transition: "stroke 0.15s, stroke-width 0.15s" }}
                 />
                 {isDir && showLabel && (
                   <text

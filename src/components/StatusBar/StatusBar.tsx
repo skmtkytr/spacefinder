@@ -18,7 +18,8 @@ export const StatusBar: React.FC = () => {
         <>
           <div className="h-3 w-px bg-gray-600" />
           <div>
-            {rootNode.childCount.toLocaleString()} items | {formatSize(rootNode.size)}
+            <span className="font-medium text-gray-300">{rootNode.childCount.toLocaleString()}</span> items |{" "}
+            <span className="font-medium text-gray-300">{formatSize(rootNode.size)}</span>
           </div>
         </>
       )}
@@ -43,7 +44,7 @@ export const StatusBar: React.FC = () => {
           </span>
           <div className="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
             <div
-              className="h-full rounded-full transition-all"
+              className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${diskInfo.usagePercent}%`,
                 backgroundColor:

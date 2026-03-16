@@ -13,16 +13,16 @@ export const Breadcrumb: React.FC = () => {
   });
 
   return (
-    <div className="flex items-center px-4 py-1.5 bg-gray-800/80 border-b border-gray-700 text-sm overflow-x-auto whitespace-nowrap">
+    <div className="flex items-center px-4 py-2 bg-gray-800/80 border-b border-gray-700 text-sm overflow-x-auto whitespace-nowrap">
       {segments.map((segment, index) => (
         <React.Fragment key={index}>
-          {index > 0 && <span className="mx-1.5 text-gray-500">/</span>}
+          {index > 0 && <span className="mx-1.5 text-gray-500">›</span>}
           <button
             onClick={() => navigateToIndex(index)}
-            className={`px-1.5 py-0.5 rounded hover:bg-gray-700 transition-colors ${
+            className={`px-2 py-0.5 rounded transition-colors ${
               index === segments.length - 1
-                ? "text-white font-medium"
-                : "text-gray-400 hover:text-gray-200"
+                ? "text-white font-medium bg-gray-700/50"
+                : "text-gray-400 hover:text-gray-200 hover:bg-gray-700"
             }`}
           >
             {segment}

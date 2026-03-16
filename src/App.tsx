@@ -1,9 +1,12 @@
-import React, { useState, useCallback } from "react";
-import { Toolbar } from "./components/Toolbar/Toolbar";
+import React, { useState, useCallback, useMemo, useRef } from "react";
+import { Toolbar, type ToolbarHandle } from "./components/Toolbar/Toolbar";
 import { Breadcrumb } from "./components/Breadcrumb/Breadcrumb";
 import { Treemap } from "./components/Treemap/Treemap";
 import { StatusBar } from "./components/StatusBar/StatusBar";
 import { ContextMenu } from "./components/ContextMenu/ContextMenu";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { useScanner } from "./hooks/useScanner";
+import { useAppStore } from "./store/appStore";
 import type { FileNode } from "./types/fileTree";
 
 const App: React.FC = () => {
@@ -12,6 +15,10 @@ const App: React.FC = () => {
     x: number;
     y: number;
   } | null>(null);
+
+  const { openAndScan, rescan } = useScanner();
+  const { navigateUp, navigateToIndex } = useAppStore();
+  const toolbarRef = useRef<ToolbarHandle>(null);
 
   const handleContextMenu = useCallback(
     (e: React.MouseEvent, node: FileNode) => {
@@ -25,9 +32,23 @@ const App: React.FC = () => {
     setContextMenu(null);
   }, []);
 
+  const shortcuts = useMemo(
+    () => ({
+      navigateUp,
+      openAndScan,
+      rescan,
+      toggleFilter: () => toolbarRef.current?.toggleFilters(),
+      closeContextMenu,
+      navigateToRoot: () => navigateToIndex(0),
+    }),
+    [navigateUp, openAndScan, rescan, closeContextMenu, navigateToIndex],
+  );
+
+  useKeyboardShortcuts(shortcuts);
+
   return (
     <div className="h-full flex flex-col bg-gray-900 text-gray-100">
-      <Toolbar />
+      <Toolbar ref={toolbarRef} />
       <Breadcrumb />
       <Treemap onContextMenu={handleContextMenu} />
       <StatusBar />
