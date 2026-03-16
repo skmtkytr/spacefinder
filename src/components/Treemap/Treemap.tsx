@@ -145,12 +145,17 @@ export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
             const h = node.y1 - node.y0;
             if (w < 1 || h < 1) return null;
 
+            // Skip root container (depth 0)
+            if (node.depth === 0) return null;
+
             const category = getFileCategory(node.data.extension);
             const color = getNodeColor(node.data.name, node.data.isDir, category);
             const showLabel = w > 40 && h > 16;
             const showSize = w > 60 && h > 30;
-            const isDir = node.data.isDir && node.depth > 0;
             const isHovered = hoveredPath === node.data.path;
+            const label = node.data.name.length > w / 6
+              ? node.data.name.slice(0, Math.floor(w / 6)) + "..."
+              : node.data.name;
 
             return (
               <g
@@ -171,41 +176,25 @@ export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
                   width={w}
                   height={h}
                   fill={color}
-                  stroke={isHovered ? "rgba(255,255,255,0.5)" : node.depth === 0 ? "transparent" : "#1a1a2e"}
-                  strokeWidth={isHovered ? 2 : node.data.isDir ? 1.5 : 0.5}
-                  opacity={isDir ? 0.7 : 0.9}
-                  rx={node.data.isDir ? 2 : 1}
+                  stroke={isHovered ? "rgba(255,255,255,0.5)" : "#1a1a2e"}
+                  strokeWidth={isHovered ? 2 : 1}
+                  opacity={0.9}
+                  rx={2}
                   style={{ transition: "stroke 0.15s, stroke-width 0.15s" }}
                 />
-                {isDir && showLabel && (
-                  <text
-                    x={node.x0 + 4}
-                    y={node.y0 + 14}
-                    fontSize={11}
-                    fill="#fff"
-                    fontWeight="bold"
-                    opacity={0.9}
-                    pointerEvents="none"
-                  >
-                    {node.data.name.length > w / 7
-                      ? node.data.name.slice(0, Math.floor(w / 7)) + "..."
-                      : node.data.name}
-                  </text>
-                )}
-                {!node.data.isDir && showLabel && (
+                {showLabel && (
                   <>
                     <text
                       x={node.x0 + w / 2}
-                      y={node.y0 + h / 2 - (showSize ? 4 : 0)}
+                      y={node.y0 + h / 2 - (showSize ? 6 : 0)}
                       textAnchor="middle"
                       dominantBaseline="central"
-                      fontSize={10}
+                      fontSize={node.data.isDir ? 11 : 10}
+                      fontWeight={node.data.isDir ? "bold" : "normal"}
                       fill="#fff"
                       pointerEvents="none"
                     >
-                      {node.data.name.length > w / 6
-                        ? node.data.name.slice(0, Math.floor(w / 6)) + "..."
-                        : node.data.name}
+                      {node.data.isDir ? "\uD83D\uDCC1 " + label : label}
                     </text>
                     {showSize && (
                       <text
@@ -218,6 +207,7 @@ export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
                         pointerEvents="none"
                       >
                         {formatSize(node.data.size)}
+                        {node.data.isDir ? ` (${node.data.childCount})` : ""}
                       </text>
                     )}
                   </>

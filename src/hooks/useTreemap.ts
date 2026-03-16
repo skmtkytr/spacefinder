@@ -9,8 +9,6 @@ import type { FileNode } from "../types/fileTree";
 import { useAppStore } from "../store/appStore";
 import { getFileCategory } from "../utils/fileCategories";
 
-const MAX_RENDER_DEPTH = 4;
-
 export interface TreemapNode {
   x0: number;
   y0: number;
@@ -69,17 +67,30 @@ export function useTreemap(width: number, height: number) {
     return filterTree(currentNode, namePattern, minSize, selectedCategories);
   }, [currentNode, filters]);
 
-  const layoutNodes = useMemo(() => {
-    if (!filteredNode || width <= 0 || height <= 0) return [];
+  // Build a shallow tree with only direct children for a flat treemap view.
+  // Directories appear as single blocks showing their aggregate size.
+  const shallowNode = useMemo(() => {
+    if (!filteredNode) return null;
+    return {
+      ...filteredNode,
+      children: filteredNode.children.map((child) =>
+        child.isDir
+          ? { ...child, children: [] }
+          : child,
+      ),
+    };
+  }, [filteredNode]);
 
-    const root = hierarchy(filteredNode)
-      .sum((d) => (d.isDir ? 0 : d.size))
+  const layoutNodes = useMemo(() => {
+    if (!shallowNode || !filteredNode || width <= 0 || height <= 0) return [];
+
+    const root = hierarchy(shallowNode)
+      .sum((d) => (d.children.length > 0 ? 0 : d.size))
       .sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
 
     const treemapLayout = treemap<FileNode>()
       .size([width, height])
       .tile(treemapSquarify.ratio(1.618))
-      .paddingTop(20)
       .paddingInner(2)
       .paddingOuter(3)
       .round(true);
@@ -87,37 +98,37 @@ export function useTreemap(width: number, height: number) {
     treemapLayout(root);
 
     const nodes: TreemapNode[] = [];
-    const collect = (node: HierarchyRectangularNode<FileNode>, depth: number) => {
-      if (depth > MAX_RENDER_DEPTH) return;
-      nodes.push({
-        x0: node.x0,
-        y0: node.y0,
-        x1: node.x1,
-        y1: node.y1,
-        data: node.data,
-        depth,
-        parent: node.parent
-          ? {
-              x0: node.parent.x0,
-              y0: node.parent.y0,
-              x1: node.parent.x1,
-              y1: node.parent.y1,
-              data: node.parent.data,
-              depth: depth - 1,
-              parent: null,
-            }
-          : null,
-      });
-      if (node.children) {
-        for (const child of node.children) {
-          collect(child as HierarchyRectangularNode<FileNode>, depth + 1);
-        }
+    const typedRoot = root as HierarchyRectangularNode<FileNode>;
+    // Only collect depth 0 (root container) and depth 1 (direct children)
+    nodes.push({
+      x0: typedRoot.x0,
+      y0: typedRoot.y0,
+      x1: typedRoot.x1,
+      y1: typedRoot.y1,
+      data: filteredNode,
+      depth: 0,
+      parent: null,
+    });
+    if (typedRoot.children) {
+      for (const child of typedRoot.children) {
+        const typedChild = child as HierarchyRectangularNode<FileNode>;
+        // Restore original data (with children) for directories so click navigation works
+        const originalChild = filteredNode.children.find(
+          (c) => c.path === typedChild.data.path,
+        );
+        nodes.push({
+          x0: typedChild.x0,
+          y0: typedChild.y0,
+          x1: typedChild.x1,
+          y1: typedChild.y1,
+          data: originalChild ?? typedChild.data,
+          depth: 1,
+          parent: null,
+        });
       }
-    };
-
-    collect(root as HierarchyRectangularNode<FileNode>, 0);
+    }
     return nodes;
-  }, [filteredNode, width, height]);
+  }, [shallowNode, filteredNode, width, height]);
 
   return { layoutNodes, currentNode: filteredNode };
 }
