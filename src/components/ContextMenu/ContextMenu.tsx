@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import type { FileNode } from "../../types/fileTree";
@@ -24,6 +24,7 @@ export const ContextMenu: React.FC<Props> = ({ node, x, y, onClose }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const { scanDirectory, rescan } = useScanner();
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [pos, setPos] = useState({ left: x, top: y });
 
   const handleReveal = useCallback(async () => {
     try {
@@ -111,6 +112,24 @@ export const ContextMenu: React.FC<Props> = ({ node, x, y, onClose }) => {
     },
   ];
 
+  useLayoutEffect(() => {
+    const el = menuRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const pad = 8;
+    let left = x;
+    let top = y;
+    if (left + rect.width > window.innerWidth - pad) {
+      left = window.innerWidth - rect.width - pad;
+    }
+    if (top + rect.height > window.innerHeight - pad) {
+      top = window.innerHeight - rect.height - pad;
+    }
+    if (left < pad) left = pad;
+    if (top < pad) top = pad;
+    setPos({ left, top });
+  }, [x, y]);
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as HTMLElement)) {
@@ -149,7 +168,7 @@ export const ContextMenu: React.FC<Props> = ({ node, x, y, onClose }) => {
     <div
       ref={menuRef}
       className="fixed z-50 backdrop-blur-sm bg-gray-800/95 border border-gray-600 rounded-lg shadow-xl py-1 min-w-[200px] animate-fade-in"
-      style={{ left: x, top: y }}
+      style={{ left: pos.left, top: pos.top }}
     >
       <div className="px-3 py-1.5 text-xs text-gray-400 truncate max-w-[250px] border-b border-gray-700">
         {node.name}

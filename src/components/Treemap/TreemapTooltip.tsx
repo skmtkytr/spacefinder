@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useLayoutEffect, useState } from "react";
 import type { FileNode } from "../../types/fileTree";
 import { formatSize } from "../../utils/formatSize";
 import { getFileCategory, CATEGORY_LABELS } from "../../utils/fileCategories";
@@ -14,11 +14,32 @@ interface Props {
 export const TreemapTooltip: React.FC<Props> = ({ node, parentSize, x, y }) => {
   const category = getFileCategory(node.extension);
   const percent = parentSize > 0 ? ((node.size / parentSize) * 100).toFixed(1) : "0";
+  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ left: x + 12, top: y + 12 });
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const pad = 8;
+    let left = x + 12;
+    let top = y + 12;
+    if (left + rect.width > window.innerWidth - pad) {
+      left = x - rect.width - 12;
+    }
+    if (top + rect.height > window.innerHeight - pad) {
+      top = y - rect.height - 12;
+    }
+    if (left < pad) left = pad;
+    if (top < pad) top = pad;
+    setPos({ left, top });
+  }, [x, y]);
 
   return (
     <div
+      ref={ref}
       className="fixed z-50 pointer-events-none backdrop-blur-sm bg-gray-900/90 border border-gray-600 rounded-lg px-3 py-2 shadow-xl text-sm max-w-xs"
-      style={{ left: x + 12, top: y + 12 }}
+      style={{ left: pos.left, top: pos.top }}
     >
       <div className="font-bold text-white truncate">{node.name}</div>
       <div className="text-gray-300 text-xs truncate mt-0.5">{node.path}</div>
