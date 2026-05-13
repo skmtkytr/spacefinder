@@ -29,6 +29,7 @@ interface AppState {
   // Actions
   setScanStatus: (status: ScanStatus) => void;
   setScanProgress: (progress: ScanProgress) => void;
+  setScanPartial: (root: FileNode) => void;
   setScanComplete: (root: FileNode) => void;
   setDiskInfo: (info: DiskInfo) => void;
   setScanPath: (path: string) => void;
@@ -75,14 +76,42 @@ export const useAppStore = create<AppState>((set) => ({
 
   setScanStatus: (status) => set({ scanStatus: status }),
   setScanProgress: (progress) => set({ scanProgress: progress }),
+  setScanPartial: (root) =>
+    set((state) => {
+      const pathIndex = buildPathIndex(root);
+      const stackValid =
+        state.pathStack.length > 0 &&
+        state.pathStack.every((p) => pathIndex.has(p));
+      if (stackValid) {
+        return { rootNode: root, pathIndex };
+      }
+      return {
+        rootNode: root,
+        pathIndex,
+        pathStack: [root.path],
+        currentPath: root.path,
+      };
+    }),
   setScanComplete: (root) => {
     const pathIndex = buildPathIndex(root);
-    set({
-      rootNode: root,
-      scanStatus: "complete",
-      pathStack: [root.path],
-      currentPath: root.path,
-      pathIndex,
+    set((state) => {
+      const stackValid =
+        state.pathStack.length > 0 &&
+        state.pathStack.every((p) => pathIndex.has(p));
+      if (stackValid) {
+        return {
+          rootNode: root,
+          scanStatus: "complete" as ScanStatus,
+          pathIndex,
+        };
+      }
+      return {
+        rootNode: root,
+        scanStatus: "complete" as ScanStatus,
+        pathStack: [root.path],
+        currentPath: root.path,
+        pathIndex,
+      };
     });
   },
   setDiskInfo: (info) => set({ diskInfo: info }),

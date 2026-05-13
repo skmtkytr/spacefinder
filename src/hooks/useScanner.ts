@@ -8,6 +8,7 @@ export function useScanner() {
   const {
     setScanStatus,
     setScanProgress,
+    setScanPartial,
     setScanComplete,
     setDiskInfo,
     setScanPath,
@@ -49,6 +50,15 @@ export function useScanner() {
               currentPath: event.currentPath,
             });
             break;
+          case "partial":
+            setScanPartial(event.root);
+            setScanProgress({
+              filesScanned: event.filesScanned,
+              dirsScanned: event.dirsScanned,
+              totalSize: event.totalSize,
+              currentPath: event.root.path,
+            });
+            break;
           case "complete":
             setScanComplete(event.root);
             break;
@@ -66,7 +76,7 @@ export function useScanner() {
         console.error("Invoke error:", err);
       }
     },
-    [reset, setScanPath, setScanStatus, setScanProgress, setScanComplete, setDiskInfo],
+    [reset, setScanPath, setScanStatus, setScanProgress, setScanPartial, setScanComplete, setDiskInfo],
   );
 
   const openAndScan = useCallback(async () => {

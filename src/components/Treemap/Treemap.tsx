@@ -22,7 +22,7 @@ export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
     y: number;
   } | null>(null);
 
-  const { navigateTo, scanStatus, scanProgress } = useAppStore();
+  const { navigateTo, scanStatus, scanProgress, rootNode } = useAppStore();
   const { layoutNodes, currentNode } = useTreemap(
     dimensions.width,
     dimensions.height,
@@ -90,7 +90,7 @@ export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
       );
     }
 
-    if (scanStatus === "scanning") {
+    if (scanStatus === "scanning" && !rootNode) {
       return (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-gray-300">
@@ -130,6 +130,20 @@ export const Treemap: React.FC<Props> = ({ onContextMenu }) => {
 
     return (
       <>
+        {scanStatus === "scanning" && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-3 py-1.5 rounded-md bg-gray-800/90 border border-gray-700 text-xs text-gray-200 shadow-lg flex items-center gap-2 pointer-events-none">
+            <svg className="w-3 h-3 text-blue-400 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+              <path d="M12 2a10 10 0 0 1 10 10" />
+            </svg>
+            <span>Scanning…</span>
+            {scanProgress && (
+              <span className="text-gray-400">
+                {scanProgress.filesScanned.toLocaleString()} files ·{" "}
+                {formatSize(scanProgress.totalSize)}
+              </span>
+            )}
+          </div>
+        )}
         <svg width={dimensions.width} height={dimensions.height}>
           <defs>
             <filter id="hover-brightness">

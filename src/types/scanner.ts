@@ -18,6 +18,13 @@ export type ScanEvent =
       currentPath: string;
     }
   | {
+      type: "partial";
+      root: FileNode;
+      filesScanned: number;
+      dirsScanned: number;
+      totalSize: number;
+    }
+  | {
       type: "complete";
       root: FileNode;
       filesScanned: number;
